@@ -2,7 +2,7 @@ import os
 import time
 import json
 
-import request
+import requests
 import urllib.parse
 
 from typing import List
@@ -162,15 +162,18 @@ class TradeStationClient():
 
     def _state_manager(self, action: str) -> None:
         """Handles the state.
-            Manages the self.state dictionary. Initalize State will set
-            the properties to their default value. Save will save the 
-            current state if 'cache_state' is set to TRUE.
 
-            NAME: action
-            DESC: action argument must of one of the following:
-                    'init' -- Initalize State.
-                    'save' -- Save the current state.
-            TYPE: String            
+        Overview:
+        ----
+        Manages the self.state dictionary. Initalize State will set
+        the properties to their default value. Save will save the 
+        current state if 'cache_state' is set to TRUE.
+
+        Arguments:
+        ----
+        name (str): action argument must of one of the following:
+            'init' -- Initalize State.
+            'save' -- Save the current state.         
         """
 
         # Define the initalized state, these are the default values.
@@ -556,7 +559,7 @@ class TradeStationClient():
         # grab the status code
         status_code = response.status_code
 
-        # grab the response headers.
+        # grab the response. headers.
         response_headers = response.headers
 
         if status_code == 200:
@@ -634,7 +637,7 @@ class TradeStationClient():
             'access_token': self.state['access_token']
         }
 
-        # grab the response
+        # grab the response.
         response = self._handle_requests(
             url=url_endpoint,
             method='get',
@@ -643,7 +646,22 @@ class TradeStationClient():
 
         return response
 
-    def account_balances(self, account_keys=None):
+    def account_balances(self, account_keys: List[str]) -> dict:
+        """Grabs all the balances for each account provided.
+
+        Args:
+        ----
+        account_keys (List[str]): A list of account numbers. Can only be a max
+            of 25 account numbers
+
+        Raises:
+        ----
+        ValueError: If the list is more than 25 account numbers will raise an error.
+
+        Returns:
+        ----
+        dict: A list of account balances for each of the accounts.
+        """
 
         if isinstance(account_keys, list):
 
@@ -662,23 +680,44 @@ class TradeStationClient():
 
             # define the endpoint.
             url_endpoint = self._api_endpoint(
-                url='accounts/{}/balances'.format(account_keys))
+                url='accounts/{account_numbers}/balances'.format(
+                    account_numbers=account_keys)
+            )
 
             # define the arguments
             params = {
                 'access_token': self.state['access_token']
             }
 
-            # grab the response
+            # grab the response.
             response = self._handle_requests(
-                url=url_endpoint, method='get', args=params)
+                url=url_endpoint,
+                method='get',
+                args=params
+            )
 
             return response
 
         else:
             raise ValueError("Account Keys, must be a list object")
 
-    def account_positions(self, account_keys=None, symbols=None):
+    def account_positions(self, account_keys: List[str], symbols: List[str]) -> dict:
+        """Grabs all the account positions.
+
+        Arguments:
+        ----
+        account_keys (List[str]): A list of account numbers..
+
+        symbols (List[str]): A list of ticker symbols, you want to return.
+
+        Raises:
+        ----
+        ValueError: If the list is more than 25 account numbers will raise an error.
+
+        Returns:
+        ----
+        dict: A list of account balances for each of the accounts.
+        """
 
         if isinstance(account_keys, list):
 
@@ -697,6 +736,7 @@ class TradeStationClient():
 
             # argument validation, symbols.
             if symbols is not None:
+
                 if len(symbols) == 0:
                     raise ValueError(
                         "You cannot pass through an empty symbols list for the filter.")
@@ -705,7 +745,8 @@ class TradeStationClient():
                     symbols_formatted = []
                     for symbol in symbols:
                         symbols_formatted.append(
-                            "Symbol eq '{}'".format(symbol))
+                            "Symbol eq '{}'".format(symbol)
+                        )
 
                     symbols = 'or '.join(symbols_formatted)
                     params = {
@@ -714,21 +755,55 @@ class TradeStationClient():
                     }
 
             else:
-                params = {'access_token': self.state['access_token']}
+                params = {
+                    'access_token': self.state['access_token']
+                }
 
             # define the endpoint.
             url_endpoint = self._api_endpoint(
-                url='accounts/{}/positions'.format(account_keys))
+                url='accounts/{account_numbers}/positions'.format(
+                    account_numbers=account_keys
+                )
+            )
 
-            # grab the response
+            # grab the response.
             response = self._handle_requests(
-                url=url_endpoint, method='get', args=params)
+                url=url_endpoint,
+                method='get',
+                args=params
+            )
 
             return response
+
         else:
             raise ValueError("Account Keys, must be a list object")
 
-    def account_orders(self, account_keys=None, since=None, page_size=None, page_number=None):
+    def account_orders(self, account_keys: List[str], since: int, page_size: int, page_number: int = 0) -> dict:
+        """Grab all the account orders for a list of accounts.
+
+        Overview:
+        ----
+        This endpoint is used to grab all the order from a list of accounts provided. Additionally,
+        each account will only go back 14 days when searching for orders.
+
+        Arguments:
+        ----
+        account_keys (List[str]): A list of account numbers.
+
+        since (int): Number of days to look back, max is 14 days.
+
+        page_size (int): The page size.
+
+        page_number (int, optional): The page number to return if more than one. Defaults to 0.
+
+        Raises:
+        ----
+        ValueError: If the list is more than 25 account numbers will raise an error.
+
+        Returns:
+        ----
+        dict: A list of account balances for each of the accounts.
+        """
 
         if isinstance(account_keys, list):
 
@@ -770,18 +845,37 @@ class TradeStationClient():
 
             # define the endpoint.
             url_endpoint = self._api_endpoint(
-                url='accounts/{}/orders'.format(account_keys))
+                url='accounts/{account_numbers}/orders'.format(
+                    account_numbers=account_keys)
+            )
 
-            # grab the response
+            # grab the response.
             response = self._handle_requests(
-                url=url_endpoint, method='get', args=params)
+                url=url_endpoint,
+                method='get',
+                args=params
+            )
 
             return response
 
         else:
             raise ValueError("Account Keys, must be a list object")
 
-    def symbol_info(self, symbol=None):
+    def symbol_info(self, symbol: str) -> dict:
+        """Grabs the info for a particular symbol
+
+        Arguments:
+        ----
+        symbol (str): A ticker symbol.
+
+        Raises:
+        ----
+        ValueError: If no symbol is provided will raise an error.
+
+        Returns:
+        ----
+        dict: A dictionary containing the symbol info.
+        """
 
         # validate the token.
         self._token_validation()
@@ -790,44 +884,39 @@ class TradeStationClient():
             raise ValueError("You must pass through a symbol.")
 
         # define the endpoint.
-        url_endpoint = self._api_endpoint(url='data/symbol/{}'.format(symbol))
+        url_endpoint = self._api_endpoint(
+            url='data/symbol/{ticker_symbol}'.format(ticker_symbol=symbol)
+        )
 
         # define the arguments.
         params = {
             'access_token': self.state['access_token']
         }
 
-        # grab the response
+        # grab the response.
         response = self._handle_requests(
-            url=url_endpoint, method='get', args=params)
+            url=url_endpoint,
+            method='get',
+            args=params
+        )
 
         return response
 
-    def quotes(self, symbols=None):
+    def quotes(self, symbols: List[str]) -> dict:
+        """Grabs the quotes for a list of symbols.
 
-        # validate the token.
-        self._token_validation()
+        Arguments:
+        ----
+        symbol (List[str]): A list of ticker symbols.
 
-        if symbols is None:
-            raise ValueError("You must pass through at least one symbol.")
+        Raises:
+        ----
+        ValueError: If no symbol is provided will raise an error.
 
-        symbols = ','.join(symbols)
-
-        # define the endpoint.
-        url_endpoint = self._api_endpoint(url='data/quote/{}'.format(symbols))
-
-        # define the arguments.
-        params = {
-            'access_token': self.state['access_token']
-        }
-
-        # grab the response
-        response = self._handle_requests(
-            url=url_endpoint, method='get', args=params)
-
-        return response
-
-    def stream_quotes_changes(self, symbols=None):
+        Returns:
+        ----
+        (dict): A dictionary containing the symbol quotes.
+        """
 
         # validate the token.
         self._token_validation()
@@ -839,7 +928,49 @@ class TradeStationClient():
 
         # define the endpoint.
         url_endpoint = self._api_endpoint(
-            url='stream/quote/changes/{}'.format(symbols))
+            url='data/quote/{symbols}'.format(symbols=symbols))
+
+        # define the arguments.
+        params = {
+            'access_token': self.state['access_token']
+        }
+
+        # grab the response.
+        response = self._handle_requests(
+            url=url_endpoint,
+            method='get',
+            args=params
+        )
+
+        return response
+
+    def stream_quotes_changes(self, symbols=None):
+        """Streams quote changes for a list of symbols.
+
+        Arguments:
+        ----
+        symbol (List[str]): A list of ticker symbols.
+
+        Raises:
+        ----
+        ValueError: If no symbol is provided will raise an error.
+
+        Returns:
+        ----
+        (dict): A dictionary containing the symbol quotes.
+        """
+
+        # validate the token.
+        self._token_validation()
+
+        if symbols is None:
+            raise ValueError("You must pass through at least one symbol.")
+
+        symbols = ','.join(symbols)
+
+        # define the endpoint.
+        url_endpoint = self._api_endpoint(
+            url='stream/quote/changes/{symbols}'.format(symbols=symbols))
 
         # define the headers
         headers = {
@@ -851,13 +982,40 @@ class TradeStationClient():
             'access_token': self.state['access_token']
         }
 
-        # grab the response
+        # grab the response.
         response = self._handle_requests(
-            url=url_endpoint, method='get', headers=headers, args=params, stream=True)
+            url=url_endpoint,
+            method='get',
+            headers=headers,
+            args=params,
+            stream=True
+        )
 
         return response
 
-    def stream_bars_start_date(self, symbol=None, interval=None, unit=None, start_date=None, session=None):
+    def stream_bars_start_date(self, symbol: str, interval: int, unit: str, start_date: str, session: str) -> dict:
+        """Stream bars for a certain data range.
+
+        Arguments:
+        ----
+        symbol (str): A ticker symbol to stream bars.
+
+        interval (int): The size of the bar.
+
+        unit (str): The frequency of the bar.
+
+        start_date (str): The start point of the streaming.
+
+        session (str): Defines whether you want bars from post, pre, or current market.
+
+        Raises:
+        ----
+        ValueError:
+
+        Returns:
+        ----
+        (dict): A dictionary of quotes.
+        """
 
         # ['USEQPre','USEQPost','USEQPreAndPost','Default']
 
@@ -879,7 +1037,13 @@ class TradeStationClient():
 
         # define the endpoint.
         url_endpoint = self._api_endpoint(
-            url='stream/barchart/{}/{}/{}/{}'.format(symbol, interval, unit, start_date))
+            url='stream/barchart/{symbol}/{interval}/{unit}/{start_date}'.format(
+                symbol=symbol,
+                interval=interval,
+                unit=unit,
+                start_date=start_date
+            )
+        )
 
         # define the arguments.
         params = {
@@ -887,13 +1051,41 @@ class TradeStationClient():
             'sessionTemplate': session
         }
 
-        # grab the response
+        # grab the response.
         response = self._handle_requests(
-            url=url_endpoint, method='get', args=params, stream=True)
+            url=url_endpoint,
+            method='get',
+            args=params,
+            stream=True
+        )
 
         return response
 
-    def stream_bars_date_range(self, symbol=None, interval=None, unit=None, start_date=None, end_date=None, session=None):
+    def stream_bars_date_range(self, symbol: str, interval: int, unit: str, start_date: str, end_date: str, session: str) -> dict:
+        """Stream bars for a certain data range.
+
+        Arguments:
+        ----
+        symbol (str): A ticker symbol to stream bars.
+
+        interval (int): The size of the bar.
+
+        unit (str): The frequency of the bar.
+
+        start_date (str): The start point of the streaming.
+
+        end_date (str): The end point of the streaming.
+
+        session (str): Defines whether you want bars from post, pre, or current market.
+
+        Raises:
+        ----
+        ValueError:
+
+        Returns:
+        ----
+        (dict): A dictionary of quotes.
+        """
 
         # validate the token.
         self._token_validation()
@@ -935,8 +1127,14 @@ class TradeStationClient():
             end_date_iso = datetime_parsed.isoformat()
 
         # define the endpoint.
-        url_endpoint = self._api_endpoint(url='stream/barchart/{}/{}/{}/{}/{}'.format(
-            symbol, interval, unit, start_date_iso, end_date_iso))
+        url_endpoint = self._api_endpoint(url='stream/barchart/{symbol}/{interval}/{unit}/{start}/{end}'.format(
+            symbol=symbol,
+            interval=interval,
+            unit=unit,
+            start=start_date_iso,
+            end=end_date_iso
+        )
+        )
 
         # define the arguments.
         params = {
@@ -944,13 +1142,128 @@ class TradeStationClient():
             'sessionTemplate': session
         }
 
-        # grab the response
+        # grab the response.
         response = self._handle_requests(
-            url=url_endpoint, method='get', args=params, stream=True)
+            url=url_endpoint,
+            method='get',
+            args=params,
+            stream=True
+        )
 
         return response
 
-    def stream_bars_back(self, symbol=None, interval=None, unit=None, bar_back=None, last_date=None, session=None):
+    def stream_bars_back(self, symbol: str, interval: int, unit: str, bar_back: int, last_date: str, session: str):
+        """Stream bars for a certain number of bars back.
+
+        Arguments:
+        ----
+        symbol (str): A ticker symbol to stream bars.
+
+        interval (int): The size of the bar.
+
+        unit (str): The frequency of the bar.
+
+        bar_back (str): The number of bars back.
+
+        last_date (str): The date from which to start going back.
+
+        session (str): Defines whether you want bars from post, pre, or current market.
+
+        Raises:
+        ----
+        ValueError:
+
+        Returns:
+        ----
+        (dict): A dictionary of quotes.
+        """
+
+        # validate the token.
+        self._token_validation()
+
+        # validate the symbol
+        if symbol is None:
+            raise ValueError("You must pass through one symbol.")
+
+        # validate the unit
+        if unit not in ["Minute", "Daily", "Weekly", "Monthly"]:
+            raise ValueError(
+                'The value you passed through for `unit` is incorrect, it must be one of the following: ["Minute", "Daily", "Weekly", "Monthly"]')
+
+        # validate the interval.
+        if interval != 1 and unit in ["Daily", "Weekly", "Monthly"]:
+            raise ValueError(
+                "The interval must be one for daily, weekly or monthly.")
+        elif interval > 1440:
+            raise ValueError("Interval must be less than or equal to 1440")
+
+        # validate the session.
+        if session is not None and session not in ['USEQPre', 'USEQPost', 'USEQPreAndPost', 'Default']:
+            raise ValueError(
+                'The value you passed through for `session` is incorrect, it must be one of the following: ["USEQPre","USEQPost","USEQPreAndPost","Default"]')
+
+        if bar_back > 157600:
+            raise ValueError("`bar_back` must be less than or equal to 157600")
+
+        if isinstance(last_date, datetime.datetime):
+            last_date_iso = last_date.isoformat()
+
+        elif isinstance(last_date, str):
+            datetime_parsed = parse(last_date)
+            last_date_iso = datetime_parsed.isoformat()
+
+        # Define the endpoint.
+        url_endpoint = self._api_endpoint(
+            url='stream/barchart/{symbol}/{interval}/{unit}/{bar_back}/{last_date}'.format(
+                symbol=symbol,
+                interval=interval,
+                unit=unit,
+                bar_back=bar_back,
+                last_date_iso=last_date_iso
+            )
+        )
+
+        # define the arguments.
+        params = {
+            'access_token': self.state['access_token'],
+            'sessionTemplate': session
+        }
+
+        # grab the response.
+        response = self._handle_requests(
+            url=url_endpoint,
+            method='get',
+            args=params,
+            stream=True
+        )
+
+        return response
+
+    def stream_bars_days_back(self, symbol: str, interval: int, unit: str, bar_back: int, last_date: str, session: str):
+        """Stream bars for a certain number of days back.
+
+        Arguments:
+        ----
+        symbol (str): A ticker symbol to stream bars.
+
+        interval (int): The size of the bar.
+
+        unit (str): The frequency of the bar.
+
+        bar_back (str): The number of bars back.
+
+        last_date (str): The date from which to start going back.
+
+        session (str): Defines whether you want bars from post, pre, or current market.
+
+        Raises:
+        ----
+        ValueError:
+
+        Returns:
+        ----
+        (dict): A dictionary of quotes.
+        """
 
         # validate the token.
         self._token_validation()
@@ -988,73 +1301,50 @@ class TradeStationClient():
 
         # define the endpoint.
         url_endpoint = self._api_endpoint(
-            url='stream/barchart/{}/{}/{}/{}/{}'.format(symbol, interval, unit, bar_back, last_date_iso))
+            url='stream/barchart/{symbol}/{interval}/{unit}/{bar_back}/{last_date}'.format(
+                symbol=symbol,
+                interval=interval,
+                unit=unit,
+                bar_back=bar_back,
+                last_date=last_date_iso
+            )
+        )
 
-        # define the arguments.
+        # Define the arguments.
         params = {
             'access_token': self.state['access_token'],
             'sessionTemplate': session
         }
 
-        # grab the response
+        # grab the response..
         response = self._handle_requests(
-            url=url_endpoint, method='get', args=params, stream=True)
+            url=url_endpoint,
+            method='get',
+            args=params,
+            stream=True
+        )
 
         return response
 
-    def stream_bars_days_back(self, symbol=None, interval=None, unit=None, bar_back=None, last_date=None, session=None):
+    def stream_bars(self, symbol: str, interval: int, bar_back: int):
+        """Stream bars for a certain symbol.
 
-        # validate the token.
-        self._token_validation()
+        Arguments:
+        ----
+        symbol (str): A ticker symbol to stream bars.
 
-        # validate the symbol
-        if symbol is None:
-            raise ValueError("You must pass through one symbol.")
+        interval (int): The size of the bar.
 
-        # validate the unit
-        if unit not in ["Minute", "Daily", "Weekly", "Monthly"]:
-            raise ValueError(
-                'The value you passed through for `unit` is incorrect, it must be one of the following: ["Minute", "Daily", "Weekly", "Monthly"]')
+        unit (str): The frequency of the bar.
 
-        # validate the interval.
-        if interval != 1 and unit in ["Daily", "Weekly", "Monthly"]:
-            raise ValueError(
-                "The interval must be one for daily, weekly or monthly.")
-        elif interval > 1440:
-            raise ValueError("Interval must be less than or equal to 1440")
+        Raises:
+        ----
+        ValueError:
 
-        # validate the session.
-        if session is not None and session not in ['USEQPre', 'USEQPost', 'USEQPreAndPost', 'Default']:
-            raise ValueError(
-                'The value you passed through for `session` is incorrect, it must be one of the following: ["USEQPre","USEQPost","USEQPreAndPost","Default"]')
-
-        if bar_back > 157600:
-            raise ValueError("`bar_back` must be less than or equal to 157600")
-
-        if isinstance(last_date, datetime.datetime):
-            last_date_iso = last_date.isoformat()
-
-        elif isinstance(last_date, str):
-            datetime_parsed = parse(last_date)
-            last_date_iso = datetime_parsed.isoformat()
-
-        # define the endpoint.
-        url_endpoint = self._api_endpoint(
-            url='stream/barchart/{}/{}/{}/{}/{}'.format(symbol, interval, unit, bar_back, last_date_iso))
-
-        # define the arguments.
-        params = {
-            'access_token': self.state['access_token'],
-            'sessionTemplate': session
-        }
-
-        # grab the response
-        response = self._handle_requests(
-            url=url_endpoint, method='get', args=params, stream=True)
-
-        return response
-
-    def stream_bars(self, symbol=None, interval=None, bar_back=None):
+        Returns:
+        ----
+        (dict): A dictionary of quotes.
+        """
 
         # validate the token.
         self._token_validation()
@@ -1071,20 +1361,35 @@ class TradeStationClient():
 
         # define the endpoint.
         url_endpoint = self._api_endpoint(
-            url='stream/tickbars/{}/{}/{}'.format(symbol, interval, bar_back))
+            url='stream/tickbars/{symbol}/{interval}/{bar_back}'.format(
+                symbol=symbol,
+                interval=interval,
+                bar_back=bar_back
+            )
+        )
 
         # define the arguments.
         params = {
             'access_token': self.state['access_token']
         }
 
-        # grab the response
+        # grab the response.
         response = self._handle_requests(
-            url=url_endpoint, method='get', args=params, stream=True)
+            url=url_endpoint,
+            method='get',
+            args=params,
+            stream=True
+        )
 
         return response
 
-    def symbol_lists(self):
+    def symbol_lists(self) -> dict:
+        """Returns a list of ticker symbols
+
+        Returns:
+        ----
+        (dict): A list of symbols.
+        """
 
         # validate the token.
         self._token_validation()
@@ -1097,54 +1402,96 @@ class TradeStationClient():
             'access_token': self.state['access_token']
         }
 
-        # grab the response
+        # grab the response.
         response = self._handle_requests(
-            url=url_endpoint, method='get', args=params)
+            url=url_endpoint,
+            method='get',
+            args=params
+        )
 
         return response
 
-    def symbol_list(self, symbol_list_id=None):
+    def symbol_list(self, symbol_list_id: List[str]) -> dict:
+        """Grab a list of symbols.
+
+        Arguments:
+        ----
+        symbol_list_id (List[str]): A list of symbol.
+
+        Returns:
+        ----
+        dict: Return a list of symbols.
+        """
 
         # validate the token.
         self._token_validation()
 
         # define the endpoint.
         url_endpoint = self._api_endpoint(
-            url='data/symbollists/{}'.format(symbol_list_id))
+            url='data/symbollists/{list_symbol}'.format(
+                list_symbol=symbol_list_id)
+        )
 
         # define the arguments.
         params = {
             'access_token': self.state['access_token']
         }
 
-        # grab the response
+        # grab the response.
         response = self._handle_requests(
-            url=url_endpoint, method='get', args=params)
+            url=url_endpoint,
+            method='get',
+            args=params
+        )
 
         return response
 
-    def symbols_from_symbol_list(self, symbol_list_id=None):
+    def symbols_from_symbol_list(self, symbol_list_id: List[str]) -> dict:
+        """Grab a list of symbols.
+
+        Arguments:
+        ----
+        symbol_list_id (List[str]): A list of symbol.
+
+        Returns:
+        ----
+        dict: Return a list of symbols.
+        """
 
         # validate the token.
         self._token_validation()
 
         # define the endpoint.
         url_endpoint = self._api_endpoint(
-            url='data/symbollists/{}/symbols'.format(symbol_list_id))
+            url='data/symbollists/{list_id}/symbols'.format(
+                list_id=symbol_list_id)
+        )
 
         # define the arguments.
         params = {
             'access_token': self.state['access_token']
         }
 
-        # grab the response
+        # grab the response.
         response = self._handle_requests(
-            url=url_endpoint, method='get', args=params)
+            url=url_endpoint,
+            method='get',
+            args=params
+        )
 
         return response
 
-    def confirm_order(self, order=None):
+    def confirm_order(self, order: dict) -> dict:
+        """Confirm an order.
 
+        Arguments:
+        ----
+        order (dict): A dictionary for order.
+
+        Returns:
+        ----
+        dict: A confirmation of the order.
+        """
         # validate the token.
         self._token_validation()
 
@@ -1156,13 +1503,23 @@ class TradeStationClient():
             'access_token': self.state['access_token']
         }
 
-        # grab the response
+        # grab the response.
         response = self._handle_requests(
             url=url_endpoint, method='post', args=params, payload=order)
 
         return response
 
-    def submit_order(self, order=None):
+    def submit_order(self, order: dict) -> dict:
+        """Submit an order.
+
+        Arguments:
+        ----
+        order (dict): A dictionary for order.
+
+        Returns:
+        ----
+        dict: A confirmation of the order.
+        """
 
         # validate the token.
         self._token_validation()
@@ -1175,32 +1532,62 @@ class TradeStationClient():
             'access_token': self.state['access_token']
         }
 
-        # grab the response
+        # grab the response.
         response = self._handle_requests(
-            url=url_endpoint, method='post', args=params, payload=order)
+            url=url_endpoint,
+            method='post',
+            args=params,
+            payload=order
+        )
 
         return response
 
-    def cancel_order(self, order_id=None):
+    def cancel_order(self, order_id: str) -> dict:
+        """Cancel an order.
+
+        Arguments:
+        ----
+        order_id (str): An order id.
+
+        Returns:
+        ----
+        dict: A confirmation of the cancel order.
+        """
 
         # validate the token.
         self._token_validation()
 
         # define the endpoint.
-        url_endpoint = self._api_endpoint(url='orders/{}'.format(order_id))
+        url_endpoint = self._api_endpoint(
+            url='orders/{order_id}'.format(order_id=order_id))
 
         # define the arguments.
         params = {
             'access_token': self.state['access_token']
         }
 
-        # grab the response
+        # grab the response.
         response = self._handle_requests(
-            url=url_endpoint, method='delete', args=params)
+            url=url_endpoint,
+            method='delete',
+            args=params
+        )
 
         return response
 
     def replace_order(self, order_id: str, new_order: dict) -> dict:
+        """Replace an order.
+
+        Arguments:
+        ----
+        order_id (str): An order id.
+
+        order (dict): A dictionary for order.
+
+        Returns:
+        ----
+        dict: A confirmation of the replaced order.
+        """
 
         # validate the token.
         self._token_validation()
@@ -1215,7 +1602,7 @@ class TradeStationClient():
             'access_token': self.state['access_token']
         }
 
-        # grab the response
+        # grab the response.
         response = self._handle_requests(
             url=url_endpoint,
             method='put',
@@ -1226,6 +1613,16 @@ class TradeStationClient():
         return response
 
     def confirm_group_order(self, orders: List[Dict]) -> dict:
+        """Confirm a list of orders.
+
+        Arguments:
+        ----
+        orders (List[dict]): A list of orders to confirm.
+
+        Returns:
+        ----
+        dict: A confirmation for all the orders.
+        """
 
         # validate the token.
         self._token_validation()
@@ -1238,13 +1635,27 @@ class TradeStationClient():
             'access_token': self.state['access_token']
         }
 
-        # grab the response
+        # grab the response.
         response = self._handle_requests(
-            url=url_endpoint, method='post', args=params, payload=orders)
+            url=url_endpoint,
+            method='post',
+            args=params,
+            payload=orders
+        )
 
         return response
 
     def submit_group_order(self, orders: List[Dict]) -> dict:
+        """Submit a list of orders.
+
+        Arguments:
+        ----
+        orders (List[dict]): A list of orders to submit.
+
+        Returns:
+        ----
+        dict: A confirmation for all the orders.
+        """
 
         # validate the token.
         self._token_validation()
@@ -1257,7 +1668,7 @@ class TradeStationClient():
             'access_token': self.state['access_token']
         }
 
-        # grab the response
+        # grab the response.
         response = self._handle_requests(
             url=url_endpoint,
             method='post',
@@ -1271,6 +1682,7 @@ class TradeStationClient():
         """Grabs all the Activiation Triggers.
 
         Returns:
+        ----
         (dict): A dictionary resource with all the activation triggers.
         """
 
@@ -1287,7 +1699,7 @@ class TradeStationClient():
             'access_token': self.state['access_token']
         }
 
-        # grab the response
+        # grab the response.
         response = self._handle_requests(
             url=url_endpoint,
             method='get',
@@ -1300,6 +1712,7 @@ class TradeStationClient():
         """Grabs all the exchanges provided by TradeStation.
 
         Returns:
+        ----
         (dict): A dictionary resource with all the exchanges listed.
         """
 
@@ -1314,7 +1727,7 @@ class TradeStationClient():
             'access_token': self.state['access_token']
         }
 
-        # grab the response
+        # grab the response.
         response = self._handle_requests(
             url=url_endpoint,
             method='get',
