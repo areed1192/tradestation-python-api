@@ -483,7 +483,7 @@ class TradeStationClient():
         # store the redirect URL
         self.state['redirect_code'] = my_response
 
-    def _handle_requests(self, url: str, method: str, headers: dict, args: dict = None, stream: bool = False, payload: dict = None) -> dict:
+    def _handle_requests(self, url: str, method: str, headers: dict = {}, args: dict = None, stream: bool = False, payload: dict = None) -> dict:
         """[summary]
 
         Arguments:
@@ -570,10 +570,8 @@ class TradeStationClient():
 
                 return streamed_content
 
-        elif status_code == 400:
-
-            # BAD REQUEST
-
+        else:
+            # Error
             print('')
             print('-'*80)
             print("BAD REQUEST - STATUS CODE: {}".format(status_code))
@@ -583,34 +581,6 @@ class TradeStationClient():
             print('-'*80)
             print('')
 
-        elif status_code == 403:
-
-            # BAD REQUEST
-
-            print('')
-            print('-'*80)
-            print("BAD REQUEST - STATUS CODE: {}".format(status_code))
-            print("RESPONSE URL: {}".format(response.url))
-            print("RESPONSE HEADERS: {}".format(response.headers))
-            print("RESPONSE TEXT: {}".format(response.text))
-            print('-'*80)
-            print('')
-
-        elif status_code == 500:
-
-            # UNEXPECTED ERROR
-
-            print('')
-            print('-'*80)
-            print("BAD REQUEST - STATUS CODE:{}".format(status_code))
-            print('')
-            print("RESPONSE URL:\n{}".format(response.url))
-            print('')
-            print("RESPONSE HEADERS:\n{}".format(response.headers))
-            print('')
-            print("RESPONSE TEXT:\n{}".format(response.text))
-            print('-'*80)
-            print('')
 
     def user_accounts(self, user_id: str) -> dict:
         """Grabs all the accounts associated with the User.
