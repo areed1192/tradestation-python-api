@@ -10,8 +10,7 @@ from typing import Dict
 from typing import Union
 from typing import Optional
 
-from datetime import date
-from datetime import datetime
+import datetime
 
 from dateutil.parser import parse
 
@@ -1122,7 +1121,7 @@ class TradeStationClient():
 
         return response
 
-    def stream_bars_back(self, symbol: str, interval: int, unit: str, bar_back: int, last_date: str, session: str):
+    def stream_bars_back(self, symbol: str, interval: int, unit: str, bar_back: int, last_date: Union[str, datetime.datetime], session: str):
         """Stream bars for a certain number of bars back.
 
         Arguments:
@@ -1135,7 +1134,7 @@ class TradeStationClient():
 
         bar_back (str): The number of bars back.
 
-        last_date (str): The date from which to start going back.
+        last_date (str or datetime): The date from which to start going back.
 
         session (str): Defines whether you want bars from post, pre, or current market.
 
@@ -1189,7 +1188,7 @@ class TradeStationClient():
                 interval=interval,
                 unit=unit,
                 bar_back=bar_back,
-                last_date_iso=last_date_iso
+                last_date=last_date_iso
             )
         )
 
